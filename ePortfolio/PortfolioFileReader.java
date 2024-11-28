@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -18,9 +17,25 @@ public class PortfolioFileReader {
 
     /**
      * Reads investments from a specified file. This method parses the file line by line,
-     * creates {@code Stock} or {@code MutualFund} objects based on investment types, and
-     * populates an {@code ArrayList} with the investment objects.
-     * 
+     * creates {@code Stock} or {@code MutualFund} objects based on the parsed investment type,
+     * and populates an {@code ArrayList} with the investment objects.
+     * <p>
+     * The file should contain each investment's attributes (e.g., type, symbol, name, quantity, price, book value),
+     * formatted as key-value pairs, separated by an equals sign.
+     * </p>
+     * Example file format:
+     * <pre>
+     * type = "stock"
+     * symbol = "AAPL"
+     * name = "Apple Inc."
+     * quantity = "50"
+     * price = "150.00"
+     * bookValue = "7500.00"
+     * </pre>
+     * <p>
+     * Investments are added to an {@code ArrayList} only when all required fields are provided.
+     * </p>
+     *
      * @param fileName the name of the file to read investments from
      * @return an {@code ArrayList} containing the investments read from the file
      */
@@ -64,7 +79,7 @@ public class PortfolioFileReader {
                 if (words.length == 2) {
     
                     String key = words[0].trim().toLowerCase();
-                    String value = words[1].trim().replaceAll("[“”\"]", "");
+                    String value = words[1].trim().replaceAll("[\"\"]", "");
                     
                     // create the investment based on the key
                     switch (key) {
@@ -122,15 +137,19 @@ public class PortfolioFileReader {
             System.err.println("File does not exist. It will be created upon saving.");
         } catch (IOException e) {
             System.out.println("An error occurred while reading the file");
-        }
+        } 
         return investments;
     }     
-
+    
     /**
      * Saves a list of investments to a specified file. Each investment is formatted for easy reading,
      * and the file is created if it does not exist.
-     * 
-     * @param fileName the name of the file to save investments to
+     * <p>
+     * If the file does not exist, it will be created. Each investment will be saved in a formatted
+     * manner that matches the structure expected by {@link #readInvestmentsFromFile(String)}.
+     * </p>
+     *
+     * @param fileName    the name of the file to save investments to
      * @param investments the {@code ArrayList} of investments to save
      */
     public static void saveInvestmentsToFile(String fileName, ArrayList<Investment> investments) {

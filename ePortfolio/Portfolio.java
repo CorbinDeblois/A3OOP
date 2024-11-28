@@ -32,380 +32,217 @@ public class Portfolio {
 
     /**
      * Buys an investment by adding to the existing quantity if already owned,
-     * or creating a new investment if not owned. Prompts the user to input
-     * details such as type, symbol, quantity, and price.
-     * 
-     * @param scanner the {@code Scanner} object to read user input
+     * or creating a new investment if not owned.
+     *
+     * @param type            the type of investment, either "Stock" or "Mutual Fund"
+     * @param investmentSymbol the symbol representing the investment (e.g., AAPL)
+     * @param name            the name of the investment
+     * @param price           the price per unit at the time of purchase
+     * @param quantityPurchase the quantity of units to purchase
+     * @return a message indicating the result of the purchase operation
      */
-    public void buy(Scanner scanner) {
-        
-        // Prompt user to enter the kind of Investment
-        boolean correctInvestmentType = false;
-        System.out.println("Please enter the kind of investment you are buying (stock or mutualfund): ");
-        String investmentType = null;
-        while (!correctInvestmentType) {
-            investmentType = scanner.nextLine().toLowerCase().replaceAll("\\s", "");;
-            if (investmentType.startsWith("s") || investmentType.startsWith("m")) {
-                correctInvestmentType = true;
-            } else {
-                System.out.println("Invalid investment type. Please enter a valid investment type (stock or mutualfund): ");
+    public String buy(String type, String investmentSymbol, String name, double price, int quantityPurchase) {
+        try {
+            // Validate input
+            if (investmentSymbol == null || investmentSymbol.trim().isEmpty()) {
+                throw new IllegalArgumentException("Investment symbol cannot be empty.");
             }
-        }
+            if (name == null || name.trim().isEmpty()) {
+                throw new IllegalArgumentException("Investment name cannot be empty.");
+            }
+            if (quantityPurchase <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than zero.");
+            }
+            if (price <= 0) {
+                throw new IllegalArgumentException("Price must be greater than zero.");
+            }
 
-        // Prompt user to enter the Symbol of the investment
-        System.out.println("Please enter the symbol of the investment: ");
-        String investmentSymbol = scanner.nextLine().toLowerCase().replaceAll("\\s", "");
+            Investment existingInvestment = null;
 
-        // Prompt the user to enter the price of the Investment
-        boolean correctPriceType = false;
-        double price = 0;
-        System.out.println("Enter the price of " + investmentSymbol + ": ");
-        while (!correctPriceType) {
-            /* The below blocks of code is inspired from 
-             * Geeks for Geeks. 
-             * https://www.geeksforgeeks.org/exceptions-in-java/
-             */
-            try {
-                price = scanner.nextDouble();
-                scanner.nextLine();
-                if (price <= 0) {
-                    System.out.println("Price cannot be negative. Please enter a positive numeric value: ");
+            // If investment exists:
+            for (Investment i : investments) {
+                if (i.getSymbol().equalsIgnoreCase(investmentSymbol)) {
+                    existingInvestment = i;
+
+                    // Check if the type matches
+                    if ((type.equalsIgnoreCase("STOCK") && !(i instanceof Stock)) ||
+                        (type.equalsIgnoreCase("MUTUAL FUND") && !(i instanceof MutualFund))) {
+                        throw new IllegalArgumentException("The type selected doesn't match the type of the existing investment.");
+                    }
+
+                    // Check if the name matches
+                    if (!i.getName().equalsIgnoreCase(name)) {
+                        throw new IllegalArgumentException("The name of the investment corresponding to the given symbol is " + existingInvestment.getName() + " not " + name + ". Please try again with the correct name.");
+                    }
+
+                    // Add more quantity to the existing investment
+                    existingInvestment.buy(quantityPurchase, price);
+                    return "Successfully purchased an additional " + quantityPurchase + " " + type + "s of " + name + " (" + investmentSymbol + ")"; 
+                } 
+            }
+
+            // If investment doesn't exist:
+            if (existingInvestment == null) {
+                Investment newInvestment;
+
+                if (type.equalsIgnoreCase("STOCK")) {
+                    newInvestment = new Stock(investmentSymbol, name, quantityPurchase, price);
+                } else if (type.equalsIgnoreCase("MUTUAL FUND")) {
+                    newInvestment = new MutualFund(investmentSymbol, name, quantityPurchase, price);
                 } else {
-                    correctPriceType = true;
+                    throw new IllegalArgumentException("Invalid investment type. Must be 'Stock' or 'Mutual Fund'.");
                 }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid investment price input. Please enter a numeric value without characters:");
-                scanner.nextLine();
-            } 
-        }
 
-        // Prompt the user to enter the quantity of the investment
-        boolean correctQuantityInput = false;
-        System.out.println("Enter how many " + investmentType + "s you want to purchase: ");
-        int quantityPurchase = 0; 
-        while (!correctQuantityInput) { 
-            try {
-                quantityPurchase = scanner.nextInt();
-                scanner.nextLine();
-                if (quantityPurchase <= 0) {
-                    System.out.println("Quantity cannot be negative. Please enter a positive numeric value: ");
-                } else {
-                    correctQuantityInput = true;
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid investment quantity input. Please enter a numeric value without character or decimal values: ");
-                scanner.nextLine();
+                // Add investment to ArrayList
+                investments.add(newInvestment);
+                return "Successfully purchased " + quantityPurchase + " " + type + "s of " + newInvestment.getName();
             }
+        } catch (IllegalArgumentException ex) {
+            return "Error: " + ex.getMessage();
         }
-            
-        // If investment exists:
-        Investment existingInvestment = null;
-        for (Investment i : investments) {
-            if (i.getSymbol().equals(investmentSymbol)) {
-                existingInvestment = i;
-                // Update the stocks related attributes
-                existingInvestment.buy(quantityPurchase, price);
-                System.out.println("Successfully purchased " + existingInvestment.getQuantity() + " " + investmentType + " of " + existingInvestment.getName());
-                break;     
-            }
-        }  
-                
-        // If stock doesnt exist:
-        if (existingInvestment == null) {
-                    
-            // Prompt user to enter name of stock
-            System.out.println("Enter the name of the investment you are buying: ");
-            String investmentName = scanner.nextLine();
-
-            // Create new object stock
-            Investment newInvestment = null;
-            if (investmentType.startsWith("s")) {
-                newInvestment = new Stock(investmentSymbol, investmentName, quantityPurchase, price);
-            } else if (investmentType.startsWith("m")) {
-                newInvestment = new MutualFund(investmentSymbol, investmentName, quantityPurchase, price);
-            }
-
-            // Add stock to arraylist
-            investments.add(newInvestment);
-            System.out.println("Successfully purchased " + newInvestment.getQuantity() + " " + investmentType + " of " + newInvestment.getName());
-        }
+        return null;
     }
 
     /**
      * Sells a specified quantity of an investment, updating its quantity or removing it if sold completely.
-     * The user specifies the symbol, quantity, and price, with validation of input values.
-     * 
-     * @param scanner the {@code Scanner} object to read user input
+     *
+     * @param symbol        the symbol of the investment to be sold
+     * @param sellingPrice  the price per unit at the time of sale
+     * @param quantityToSell the quantity of units to sell
+     * @return a message indicating the result of the sale operation
      */
-    public void sell(Scanner scanner) {
-
-        // Prompt user to provide symbol
-        System.out.println("Enter the symbol of the investment you are selling: ");
-        String symbol = scanner.nextLine().toLowerCase().replaceAll("\\s", "");
-
-        Investment investmentToSell = null;
-
-        // Search if investment exists based off symbol
-        for (Investment i : investments) {
-            if (symbol.equals(i.getSymbol())) {
-                investmentToSell = i; 
-                break;
+    public String sell(String symbol, double sellingPrice, int quantityToSell) {
+        try {
+            // Validate input
+            if (symbol == null || symbol.trim().isEmpty()) {
+                throw new IllegalArgumentException("Investment symbol cannot be empty.");
             }
-        } 
+            if (quantityToSell <= 0) {
+                throw new IllegalArgumentException("Quantity to sell must be greater than zero.");
+            }
+            if (sellingPrice <= 0) {
+                throw new IllegalArgumentException("Selling price must be greater than zero.");
+            }
 
-        // If investment doesnt exist, print error message and exit
-        if (investmentToSell == null) {
-            System.out.println("Investment " + symbol + " not found.");
-            return;
-        }
+            Investment investmentToSell = null;
 
-        // Prompt user to provide price when being sold
-        System.out.println("Enter the price that you are selling " + symbol + " at: ");
-        double actualPrice = 0;
-        boolean actualPriceIsDouble = false;
-        while (!actualPriceIsDouble) {
-            try {
-                actualPrice = scanner.nextDouble();
-                scanner.nextLine();
-                if (actualPrice <= 0) {
-                    System.out.println("Invalid price input. Please enter a positive value: ");
-                } else {
-                    actualPriceIsDouble = true; 
+            // Search if investment exists based on symbol
+            for (Investment i : investments) {
+                if (symbol.equalsIgnoreCase(i.getSymbol())) {
+                    investmentToSell = i;
+                    break;
                 }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid investment actual price input. Please enter a numeric value without a character: ");
-                scanner.nextLine();
             }
-        }
 
-        // Prompt user to provide quantity to sell
-        System.out.print("Enter the quantity of " + symbol + " that you are selling: ");
-        int quantityToSell = 0;
-        boolean isQuantityToSellInputCorrect = false;
-        
-        while (!isQuantityToSellInputCorrect) {
-            try {
-                quantityToSell = scanner.nextInt();
-                scanner.nextLine();
-                if (quantityToSell <= 0) {
-                    System.out.println("Please enter a positive integer value. Quantity cannot be negative: ");;
-                } else {
-                    isQuantityToSellInputCorrect = true;
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid investment quantity input. Please enter a numeric value without characters or decimal values:  ");
-                scanner.nextLine();
+            // If investment doesn't exist
+            if (investmentToSell == null) {
+                throw new IllegalArgumentException("Investment " + symbol + " not found.");
             }
-        }
 
-        // If quantity to be sold is < quantity available.
-        int currentQuantity = investmentToSell.getQuantity();
-        if (currentQuantity < quantityToSell) {
-            System.out.println("Error: Not enough quantity to sell. You currently have " + currentQuantity + "/" + quantityToSell);
-            return;
-        }
+            // If quantity to be sold exceeds the available quantity
+            int currentQuantity = investmentToSell.getQuantity();
+            if (currentQuantity < quantityToSell) {
+                throw new IllegalArgumentException("Error: Not enough quantity to sell. You currently have " + currentQuantity + "/" + quantityToSell);
+            }
 
-        // If quantity to sell is the same as quantity available to sell
-        if (quantityToSell == currentQuantity) {
-                    
-            // Remove from arraylist
-            investmentToSell.sell(quantityToSell, actualPrice);
-            investments.remove(investmentToSell);
-            System.out.println("Successfully sold " + quantityToSell + " of " + symbol + ".");
+            // Handle sale of entire or partial investment
+            String message2 = investmentToSell.sell(quantityToSell, sellingPrice);
+            if (quantityToSell == currentQuantity) {
+                investments.remove(investmentToSell);
+            }
+            return "Successfully sold " + quantityToSell + " of " + symbol + "." + "\n" + message2;
 
-        // If quantity to sell is less then quantity available to sell
-        } else if (quantityToSell < currentQuantity) {
-
-            // Update attributes
-            investmentToSell.sell(quantityToSell, actualPrice);
-            System.out.println("Successfully sold " + quantityToSell + " of " + symbol + ".");
+        } catch (IllegalArgumentException ex) {
+            return "Error: " + ex.getMessage();
         }
     }
 
     /**
-     * Updates the price of each investment in the portfolio by prompting
-     * the user for new values, validating that the input price is non-negative.
-     * 
-     * @param scanner the {@code Scanner} object to read user input
-     */
-    public void update(Scanner scanner) {
-        
-        // Update prices for all stocks
-        System.out.println("Updating prices for all investments...");
-        double newPrice = 0;
-        boolean correctPriceUpdate;
-        for (Investment i : investments) {
-            correctPriceUpdate = false;
-            
-            if (i instanceof Stock) {
-                System.out.println("Enter the new price for stock " + i.getName() + " (" + i.getSymbol() + ", Current Price: " + i.getPrice() + "): ");
-            } else if (i instanceof MutualFund) {
-                System.out.println("Enter the new price for mutualfund " + i.getName() + " (" + i.getSymbol() + ", Current Price: " + i.getPrice() + "): ");
-            }
-            
-            while (!correctPriceUpdate) {
-                try {
-                    newPrice = scanner.nextDouble();
-                    scanner.nextLine();
-                    if (newPrice < 0) {
-                        System.out.println("Please enter a positve price value: ");
-                    } else {
-                        correctPriceUpdate = true;
-                        i.setPrice(newPrice);
-                        System.out.println("Updated " + i.getName() + " to new price: " + newPrice);
-                    }
-                } catch (InputMismatchException e) {
-                    System.out.println("Invalid Investment price type. Please enter a value that is only numeric and doesnt contain any characters: ");
-                    scanner.nextLine();
-                }
-            }
-        }
-    }
+     * Calculates and returns the gain for each investment individually.
+     *
+     * @return an {@code ArrayList} of {@code Double} representing the gain for each investment
+     */ 
+    public ArrayList<Double> getGain() {
+        ArrayList<Double> individualGains = new ArrayList<>();
 
-    /**
-     * Calculates and displays the gain for each investment individually,
-     * as well as the total portfolio gain.
-     */  
-    public void getGain() {
-        double totalGain = 0.0;
-        
         // Calculate gain for all stocks
-        System.out.println("Calculating gain for all investments...");
-        double gain;
+        int count = 0;
         for (Investment i : investments) {
-            if (i instanceof Stock) {
-                gain = (i.getPrice() * i.getQuantity() - Stock.COMISSION) - i.getBookValue();
-                System.out.printf("Gain for stock %s (%s): %.2f%n", i.getName(), i.getSymbol(), gain);
-                totalGain += gain;
-            } else if (i instanceof MutualFund) {
-                gain = (i.getPrice() * i.getQuantity() - MutualFund.REDEMPTIONFEE) - i.getBookValue();
-                System.out.printf("Gain for mutual fund %s (%s): %.2f%n", i.getName(), i.getSymbol(), gain);
-                totalGain += gain;
-            }
+            individualGains.add(i.getGain());
         }
-    
-        // Print total gain
-        System.out.printf("Total portfolio gain: %.2f%n", totalGain);
+
+        return individualGains;
     }
     
     /**
      * Searches for investments based on a symbol, keywords in the name, and a price range.
-     * Displays matching investments if found, or a message if no matches are found.
-     * 
-     * @param scanner the {@code Scanner} object to read user input
+     *
+     * @param tickerSymbol the symbol of the investment to search for (optional)
+     * @param keywords     the keywords in the investment name to search for (optional)
+     * @param lowPrice     the minimum price range for search
+     * @param highPrice    the maximum price range for search
+     * @return an {@code ArrayList} of {@code String} representing matching investments, or {@code null} if no matches are found
      */
-    public void search(Scanner scanner) {
+    public ArrayList<String> search(String tickerSymbol, String keywords, double lowPrice, double highPrice) {
+        updateKeywordIndex();
 
-        // Prompt user to enter the symbol (optional)
-        System.out.println("Enter the symbol of the investment (or leave blank): ");
-        String tickerSymbol = scanner.nextLine().toLowerCase().trim();
+        // Trim and split keywords
+        String[] nameKeywords = keywords.trim().split("\\s+");
+        Set<Integer> matchingIndexes = new HashSet<>();
 
-        // Prompt user to enter multiple keywords for the name (optional)
-        System.out.println("Enter keyword(s) for the name (separate with spaces). Leave blank if not needed: ");
-        String[] nameKeywords = scanner.nextLine().toLowerCase().trim().split("\\s+");
+        // If keywords are provided, start filtering by the first keyword
+        if (!keywords.trim().isEmpty()) {
+            if (nameIndex.containsKey(nameKeywords[0].toLowerCase())) {
+                matchingIndexes.addAll(nameIndex.get(nameKeywords[0].toLowerCase()));
 
-        // Prompt user to enter the price range (optional)
-        System.out.println("Enter the price range (e.g., 10.00-100.00 for $10 to $100, -100.00 for $100 or lower, 10.00- for $10 or more, 15 for exactly $15): ");
-        String priceRange = scanner.nextLine().trim();
-
-        Double lowPriceRange = 0.0;
-        Double highPriceRange = Double.MAX_VALUE; // Set high to max by default
-        
-        // Parsing the price input properly
-        if (!priceRange.isEmpty()) {
-            try {
-                String[] tempValues = priceRange.split("-");
-
-                if (tempValues.length == 1) { // Only one value given
-                    if (priceRange.startsWith("-")) {
-                        // Case: "-100" (upper bound only)
-                        highPriceRange = Double.parseDouble(tempValues[0].substring(1));
-                        lowPriceRange = 0.0;
-                    } else if (priceRange.endsWith("-")) {
-                        // Case: "100" (lower bound only)
-                        lowPriceRange = Double.parseDouble(tempValues[0]);
-                        highPriceRange = Double.MAX_VALUE;
+                // For each subsequent keyword, perform an intersection with the matching indexes
+                for (int i = 1; i < nameKeywords.length; i++) {
+                    String keyword = nameKeywords[i].toLowerCase();
+                    if (nameIndex.containsKey(keyword)) {
+                        matchingIndexes.retainAll(nameIndex.get(keyword));
                     } else {
-                        lowPriceRange = Double.parseDouble(tempValues[0]);
-                        highPriceRange = Double.parseDouble(tempValues[0]);
-                    }
-                } else if (tempValues.length == 2) { // Two values given, e.g., "10-100"
-                    if (!tempValues[0].isEmpty()) {
-                        lowPriceRange = Double.parseDouble(tempValues[0]);
-                    }
-                    if (!tempValues[1].isEmpty()) {
-                        highPriceRange = Double.parseDouble(tempValues[1]);
+                        // If any keyword has no matches, return no results
+                        return null;
                     }
                 }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid price range format. Please enter a valid numeric range.");
-                return;
-            }
-        }
-
-        // create set of all the matching indexes 
-        Set<Integer> matchingIndexes = new HashSet<>(); // to gather matching indexes
-
-        // If keywords provided, initialize mathcing Indexes with the indexes for the first keyword
-        String keyword;
-        if (nameKeywords.length > 0 && nameIndex.containsKey(nameKeywords[0])) {
-            matchingIndexes.addAll(nameIndex.get(nameKeywords[0]));
-
-            // For each subsequent keyword, perform an intersection with matchingKeywords
-            for (int i = 1; i < nameKeywords.length; i++) {
-                keyword = nameKeywords[i];
-                
-                if (nameIndex.containsKey(keyword)) {
-                    // Get indexes for current keyword
-                    Set<Integer> keywordIndexes = new HashSet<>(nameIndex.get(keyword));
-                    // keep only indexes common to both sets
-                    matchingIndexes.retainAll(keywordIndexes);
-                } else {
-                    // if any keyword has no matches, clear
-                    matchingIndexes.clear();
-                    break;
-                }
+            } else {
+                // If the first keyword doesn't match anything, return no results
+                return null;
             }
         } else {
-            // if no keywords are provided, add all indexes to start
+            // If no keywords are provided, include all investments initially
             for (int i = 0; i < investments.size(); i++) {
                 matchingIndexes.add(i);
             }
         }
 
-        System.out.println("Search Results: ");
-        boolean found = false;
-
-        // now iterate over the matching indexes and apply the symbols and price filters
+        // Now filter by symbol and price range
+        ArrayList<String> resultList = new ArrayList<>();
         for (Integer index : matchingIndexes) {
             Investment investment = investments.get(index);
-            if (matchesCriteria(investment, tickerSymbol, lowPriceRange, highPriceRange)) {
-                System.out.println(investment);
-                found = true;
-                System.out.println("--------------------------------------------------");
+            if (matchesCriteria(investment, tickerSymbol, lowPrice, highPrice)) {
+                resultList.add(investment.toString());
             }
         }
 
-        if (!found) {
-            System.out.println("No investments found matching the criteria.");
-        }
+        return resultList.isEmpty() ? null : resultList;
     }
 
+
     /**
-     * Helper method to determine if an investment matches the specified search criteria
-     * 
+     * Helper method to determine if an investment matches the specified search criteria.
+     *
      * @param investment the investment being checked
-     * @param symbol the desired symbol, or empty if not filtering by symbol
-     * @param lowPrice the minimum price, or 0 if not filtering by lower bound
-     * @param highPrice the maximum price, or Double.MAX_VALUE if not filtering by upper bound
+     * @param symbol     the desired symbol, or empty if not filtering by symbol
+     * @param lowPrice   the minimum price, or 0 if not filtering by lower bound
+     * @param highPrice  the maximum price, or {@code Double.MAX_VALUE} if not filtering by upper bound
      * @return {@code true} if the investment matches the criteria; {@code false} otherwise
      */
     private boolean matchesCriteria(Investment investment, String symbol, Double lowPrice, Double highPrice) {
         boolean matchesSymbol = symbol.isEmpty() || investment.getSymbol().equalsIgnoreCase(symbol);
 
         double investmentPrice = investment.getPrice();
-        boolean matchesPrice = investmentPrice >= lowPrice && investmentPrice <= highPrice;
-
+        boolean matchesPrice = (lowPrice == null || investmentPrice >= lowPrice) && (highPrice == null || investmentPrice <= highPrice);
         return matchesSymbol && matchesPrice;
     }
 
@@ -450,18 +287,22 @@ public class Portfolio {
         }
     }
 
+    // Getters
+
     /**
      * Returns the list of investments in the portfolio.
-     * 
+     *
      * @return an {@code ArrayList} of {@code Investment} objects
      */
     public ArrayList<Investment> getInvestments() {
         return this.investments;
     }
 
+    // Setters
+
     /**
      * Sets the list of investments in the portfolio.
-     * 
+     *
      * @param investments the {@code ArrayList} of investments to set in the portfolio
      */
     public void setInvestments(ArrayList<Investment> investments) {

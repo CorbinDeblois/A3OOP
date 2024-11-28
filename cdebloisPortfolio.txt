@@ -1,9 +1,9 @@
 type = "stock"
 symbol = "AAPL"
 name = "Apple Inc."
-quantity = "500"
-price = "142.23"
-bookValue = "55049.99"
+quantity = "450"
+price = "139.0"
+bookValue = "49544.991"
 
 type = "mutualfund"
 symbol = "SSETX"

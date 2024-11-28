@@ -13,11 +13,11 @@ public class Stock extends Investment {
     /**
      * Constructs a Stock object with a specified symbol, name, quantity, price, and book value.
      * 
-     * @param symbol the symbol of the stock
+     * @param symbol the symbol of the stock (e.g., AAPL for Apple Inc.)
      * @param name the name of the stock
-     * @param quantity the quantity of the stock
-     * @param price the price of the stock
-     * @param bookValue the book value of the stock, includes an additional commission
+     * @param quantity the quantity of the stock owned
+     * @param price the price per unit of the stock
+     * @param bookValue the book value of the stock, includes an additional commission fee
      */
     public Stock(String symbol, String name, int quantity, double price, double bookValue) {
         super(symbol, name, quantity, price, bookValue);    // Calls parent constructor
@@ -25,12 +25,12 @@ public class Stock extends Investment {
     
     /**
      * Constructs a Stock object with a specified symbol, name, quantity, and price.
-     * The book value is calculated based on the quantity and price, with an additional commission.
+     * The book value is calculated based on the quantity and price, with an additional commission fee.
      * 
-     * @param symbol the symbol of the stock
+     * @param symbol the symbol of the stock (e.g., AAPL for Apple Inc.)
      * @param name the name of the stock
-     * @param quantity the quantity of the stock
-     * @param price the price of the stock
+     * @param quantity the quantity of the stock owned
+     * @param price the price per unit of the stock
      */
     public Stock(String symbol, String name, int quantity, double price) {
         super(symbol, name, quantity, price);
@@ -53,23 +53,25 @@ public class Stock extends Investment {
     }
 
     /**
-     * Sells a portion of stocks by updating the quantity and book value.
-     * Prints the payment received after deducting the commission from the sale.
+     * Sells a specified quantity of stocks by updating the quantity and book value.
+     * Calculates the payment received after deducting the commission from the sale.
      * 
      * @param quantity the quantity of stocks to sell
-     * @param price the price at which the stocks are sold
+     * @param price the price per unit at which the stocks are sold
+     * @return a string message indicating the payment received after deducting the commission
      */
     @Override
-    public void sell(int quantity, double price) {
+    public String sell(int quantity, double price) {
         double paymentReceived = quantity * price - COMISSION;
-        System.out.println(String.format("Payment received by investor is $%.2f", paymentReceived));
+        String message = "Payment received by investor is " + paymentReceived;
         super.sell(quantity, price);
+        return message;
     }
 
     /**
-     * Overridden toString method to provide a formatted string representation of the investment.
+     * Provides a formatted string representation of the stock.
      * 
-     * @return a string displaying the name, symbol, quantity, price, and book value of the investment
+     * @return a string displaying the name, symbol, quantity, price, and book value of the stock
      */
     @Override
     public String toString() {
@@ -77,9 +79,10 @@ public class Stock extends Investment {
     }
 
     /**
-     * Overridden toFileFormat method to provide a formatted output to file.
+     * Returns a string representation of the stock in a format suitable for saving to a file.
+     * This includes the type, symbol, name, quantity, price, and book value.
      * 
-     * @return a string in the correct format displaying the investment
+     * @return a string formatted for file output, representing the stock's attributes
      */
     @Override
     public String toFileFormat() {
@@ -89,5 +92,16 @@ public class Stock extends Investment {
                "quantity = \"" + this.getQuantity() + "\"\n" +
                "price = \"" + this.getPrice() + "\"\n" +
                "bookValue = \"" + this.getBookValue() + "\"\n";
+    }
+
+    /**
+     * Calculates the gain for the stock.
+     * The gain is calculated as the current value of the stock minus the commission and the book value.
+     * 
+     * @return the calculated gain for the stock
+     */
+    @Override
+    public double getGain() {
+        return (this.getPrice() * this.getQuantity() - COMISSION) - this.getBookValue();
     }
 }
